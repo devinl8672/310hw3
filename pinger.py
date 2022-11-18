@@ -20,12 +20,12 @@ def checksum(string):
     while count < countTo:
         thisVal = string[count + 1] * 256 + string[count]
         csum = csum + thisVal
-        csum = csum & 0xffffffffL
+        csum = csum & 0xffffffff
         count = count + 2
 
     if countTo < len(string):
         csum = csum + ord(string[len(str) - 1])
-        csum = csum & 0xffffffffL
+        csum = csum & 0xffffffff
 
     csum = (csum >> 16) + (csum & 0xffff)
     csum = csum + (csum >> 16)
@@ -48,10 +48,20 @@ def receiveOnePing(mySocket, ID, timeout, destAddr):
         recPacket, addr = mySocket.recvfrom(1024)
 
         #Fill in start
-
         #Fetch the ICMP header from the IP packet
-
-
+        # print(recPacket)
+        ICMPHeader = recPacket[20:28]
+        icmpType, icmpCode, checksum, id, seq = struct.unpack("bbHHh", ICMPHeader)
+        
+        if icmpType == 0 and icmpCode == 0 and id == ID:
+            ICMPData = recPacket[28:36]
+            icmpTime = struct.unpack("d", ICMPData)[0]
+            icmpRTT = (timeReceived - icmpTime) * 1000 #convert into milliseconds
+            rtt_min = min(icmpRTT, rtt_min)
+            rtt_max = max(icmpRTT, rtt_max)
+            rtt_sum = rtt_sum + icmpRTT
+            rtt_cnt += 1
+            return ("{} bytes from {}: time={:.1f} ms".format(len(recPacket), destAddr, icmpRTT))
         #Fill in end
 
         timeLeft = timeLeft - howLongInSelect
@@ -88,7 +98,7 @@ def doOnePing(destAddr, timeout):
     #SOCK_RAW is a powerful socket type. For more details see: http://sock-raw.org/papers/sock_raw
     
     #Fill in start
-    
+    mySocket = socket.socket(socket.AF_INET, socket.SOCK_RAW, icmp)
     #Create Socket here
 
     #Fill in end
@@ -106,20 +116,23 @@ def ping(host, timeout=1):
     #timeout=1 means: If one second goes by without a reply from the server,
     #the client assumes that either the client's ping or the server's pong is lost
     dest = socket.gethostbyname(host)
-    print "Pinging " + dest + " using Python:"
+    print("Pinging " + dest + " using Python:")
     #Send ping requests to a server separated by approximately one second
     try:
         while True:
             cnt += 1
-            print doOnePing(dest, timeout)
+            print(doOnePing(dest, timeout))
             time.sleep(1)
     except KeyboardInterrupt:
         
          #Fill in start
-    
+        print("--- {} ping statistics ---\nround-trip min/avg/max {:.3f}/{:.3f}/{:.3f} ms".format(host, rtt_min, (rtt_sum/rtt_cnt),rtt_max))
         #Calculate Statistics here
 
         #Fill in end
+        pass
         
 if __name__ == '__main__':
+    # host = "127.0.0.1"
+    # ping(host)
     ping(sys.argv[1])
