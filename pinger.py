@@ -126,13 +126,13 @@ def ping(host, timeout=1):
     except KeyboardInterrupt:
         
          #Fill in start
-        print("--- {} ping statistics ---\nround-trip min/avg/max {:.3f}/{:.3f}/{:.3f} ms".format(host, rtt_min, (rtt_sum/rtt_cnt),rtt_max))
+        print("--- {} ping statistics ---\nround-trip min/avg/max {:.3f}/{:.3f}/{:.3f} ms".format(dest, rtt_min, (rtt_sum/rtt_cnt),rtt_max))
         #Calculate Statistics here
 
         #Fill in end
-        pass
         
 if __name__ == '__main__':
     # host = "127.0.0.1"
-    # ping(host)
+    # ping(h
+    print(sys.argv[1])
     ping(sys.argv[1])
